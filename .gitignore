@@ -1,0 +1,10 @@
+# secrets
+.env
+*.tfvars
+!*.tfvars.example
+
+# terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
