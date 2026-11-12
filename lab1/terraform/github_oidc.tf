@@ -1,10 +1,8 @@
-# GitHub Actions authenticates to AWS with short-lived tokens (OIDC), no access keys are stored anywhere.
 resource "aws_iam_openid_connect_provider" "github" {
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
 }
 
-# Trust policy: only workflows of THIS repository running on the main branch may assume the role
 data "aws_iam_policy_document" "github_assume" {
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
@@ -33,7 +31,6 @@ resource "aws_iam_role" "github_deploy" {
   assume_role_policy = data.aws_iam_policy_document.github_assume.json
 }
 
-# Least privilege: push images to one repository and update one ECS service
 data "aws_iam_policy_document" "github_deploy" {
   statement {
     sid       = "EcrLogin"
@@ -45,6 +42,7 @@ data "aws_iam_policy_document" "github_deploy" {
     sid = "EcrPush"
     actions = [
       "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
       "ecr:InitiateLayerUpload",
       "ecr:UploadLayerPart",
       "ecr:CompleteLayerUpload",
@@ -82,6 +80,7 @@ data "aws_iam_policy_document" "github_deploy" {
       values   = ["ecs-tasks.amazonaws.com"]
     }
   }
+
 }
 
 resource "aws_iam_role_policy" "github_deploy" {

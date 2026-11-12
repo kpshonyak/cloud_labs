@@ -7,7 +7,6 @@ resource "aws_cloudwatch_log_group" "app" {
   retention_in_days = 7
 }
 
-# --- task execution role: lets ECS pull the image, write logs and read the DB secret ---
 data "aws_iam_policy_document" "ecs_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -42,7 +41,6 @@ resource "aws_iam_role_policy" "read_db_secret" {
   policy = data.aws_iam_policy_document.read_db_secret.json
 }
 
-# --- task definition and service ---
 resource "aws_ecs_task_definition" "app" {
   family                   = var.project_name
   network_mode             = "awsvpc"
@@ -87,10 +85,8 @@ resource "aws_ecs_service" "app" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
-  # destroy must not hang on a running service
   force_delete = true
 
-  # give the container time to start before the load balancer health check can stop it
   health_check_grace_period_seconds = 60
 
   network_configuration {
@@ -110,7 +106,6 @@ resource "aws_ecs_service" "app" {
     aws_lb_listener.http,
   ]
 
-  # CI/CD registers new task definition revisions; Terraform must not roll them back
   lifecycle {
     ignore_changes = [task_definition]
   }

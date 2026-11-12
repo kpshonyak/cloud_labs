@@ -17,7 +17,7 @@ variable "image_tag" {
 }
 
 variable "github_repo" {
-  description = "GitHub repository allowed to deploy (owner/name)"
+  description = "GitHub repository allowed to deploy, in the owner@id/name@id form used in the OIDC subject claim"
   type        = string
-  default     = "kpshonyak/cloud_labs"
+  default     = "kpshonyak@102899188/cloud_labs@1454282159"
 }
