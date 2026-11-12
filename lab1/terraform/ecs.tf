@@ -7,7 +7,6 @@ resource "aws_cloudwatch_log_group" "app" {
   retention_in_days = 7
 }
 
-# --- task execution role: lets ECS pull the image, write logs and read the DB secret ---
 data "aws_iam_policy_document" "ecs_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -42,7 +41,6 @@ resource "aws_iam_role_policy" "read_db_secret" {
   policy = data.aws_iam_policy_document.read_db_secret.json
 }
 
-# --- task definition and service ---
 resource "aws_ecs_task_definition" "app" {
   family                   = var.project_name
   network_mode             = "awsvpc"
@@ -87,14 +85,24 @@ resource "aws_ecs_service" "app" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
-  # destroy must not hang on a running service
   force_delete = true
+
+  health_check_grace_period_seconds = 60
 
   network_configuration {
     subnets          = aws_subnet.public[*].id
     security_groups  = [aws_security_group.app.id]
-    assign_public_ip = true
+    assign_public_ip = true # needed to pull the image from ECR (no NAT gateway); inbound is blocked by the security group
   }
 
-  depends_on = [aws_iam_role_policy_attachment.task_execution]
+  load_balancer {
+    target_group_arn = aws_lb_target_group.app.arn
+    container_name   = "api"
+    container_port   = 8080
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.task_execution,
+    aws_lb_listener.http,
+  ]
 }

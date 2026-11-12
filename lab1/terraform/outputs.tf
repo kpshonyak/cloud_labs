@@ -12,3 +12,13 @@ output "rds_endpoint" {
   description = "Database address (reachable only from inside the VPC)"
   value       = aws_db_instance.main.address
 }
+
+output "app_url" {
+  description = "Public address of the application (load balancer)"
+  value       = "http://${aws_lb.main.dns_name}"
+}
+
+output "target_group_arn" {
+  description = "Target group ARN (used to check target health)"
+  value       = aws_lb_target_group.app.arn
+}
