@@ -22,3 +22,8 @@ output "target_group_arn" {
   description = "Target group ARN (used to check target health)"
   value       = aws_lb_target_group.app.arn
 }
+
+output "github_deploy_role_arn" {
+  description = "IAM role assumed by GitHub Actions (put it in the AWS_ROLE_ARN repository variable)"
+  value       = aws_iam_role.github_deploy.arn
+}

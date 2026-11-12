@@ -15,3 +15,9 @@ variable "image_tag" {
   type        = string
   default     = "v1"
 }
+
+variable "github_repo" {
+  description = "GitHub repository allowed to deploy (owner/name)"
+  type        = string
+  default     = "kpshonyak/cloud_labs"
+}
