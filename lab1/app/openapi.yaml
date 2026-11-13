@@ -1,0 +1,256 @@
+openapi: 3.0.3
+info:
+  title: Track Catalog API
+  version: 1.0.0
+  description: REST API for playlists and tracks (Go + PostgreSQL), deployed on AWS.
+servers:
+  - url: /
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns 200 when the application can reach the database. Used by the load balancer.
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        "503":
+          description: Database unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /playlists:
+    get:
+      summary: List playlists
+      responses:
+        "200":
+          description: All playlists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Playlist"
+    post:
+      summary: Create a playlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaylistInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Playlist"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /playlists/{id}/tracks:
+    get:
+      summary: List tracks of a playlist
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Tracks of the playlist
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Track"
+        "400":
+          description: Invalid id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /tracks:
+    get:
+      summary: List tracks
+      responses:
+        "200":
+          description: All tracks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Track"
+    post:
+      summary: Create a track
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrackInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Track"
+        "400":
+          description: Invalid request or playlist not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /tracks/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      summary: Get a track
+      responses:
+        "200":
+          description: The track
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Track"
+        "400":
+          description: Invalid id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Track not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Update a track
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrackInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Track"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Track not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete a track
+      responses:
+        "204":
+          description: Deleted
+        "400":
+          description: Invalid id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Track not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+  schemas:
+    Playlist:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: Rock
+    PlaylistInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          example: Rock
+    Track:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+          example: Song 2
+        artist:
+          type: string
+          example: Blur
+        duration_sec:
+          type: integer
+          example: 122
+        playlist_id:
+          type: integer
+          format: int64
+          example: 1
+    TrackInput:
+      type: object
+      required: [title, artist, duration_sec, playlist_id]
+      properties:
+        title:
+          type: string
+          example: Song 2
+        artist:
+          type: string
+          example: Blur
+        duration_sec:
+          type: integer
+          minimum: 1
+          example: 122
+        playlist_id:
+          type: integer
+          format: int64
+          minimum: 1
+          example: 1
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: track not found

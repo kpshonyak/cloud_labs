@@ -80,6 +80,8 @@ func main() {
 	mux.HandleFunc("PUT /tracks/{id}", a.updateTrack)
 	mux.HandleFunc("DELETE /tracks/{id}", a.deleteTrack)
 
+	registerDocs(mux)
+
 	srv := &http.Server{Addr: ":" + port, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 	go func() {
 		<-ctx.Done()
