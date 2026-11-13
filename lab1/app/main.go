@@ -46,6 +46,7 @@ type Track struct {
 type app struct{ db *pgxpool.Pool }
 
 func main() {
+	loadAuthConfig()
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		log.Fatal("DATABASE_URL is not set")
@@ -81,8 +82,9 @@ func main() {
 	mux.HandleFunc("DELETE /tracks/{id}", a.deleteTrack)
 
 	registerDocs(mux)
+	registerAuth(mux)
 
-	srv := &http.Server{Addr: ":" + port, Handler: logRequests(mux), ReadHeaderTimeout: 5 * time.Second}
+	srv := &http.Server{Addr: ":" + port, Handler: logRequests(requireAuth(mux)), ReadHeaderTimeout: 5 * time.Second}
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

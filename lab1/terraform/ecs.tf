@@ -31,7 +31,7 @@ resource "aws_iam_role_policy_attachment" "task_execution" {
 data "aws_iam_policy_document" "read_db_secret" {
   statement {
     actions   = ["secretsmanager:GetSecretValue"]
-    resources = [aws_secretsmanager_secret.db_url.arn]
+    resources = [aws_secretsmanager_secret.db_url.arn, aws_secretsmanager_secret.auth.arn]
   }
 }
 
@@ -64,7 +64,10 @@ resource "aws_ecs_task_definition" "app" {
 
       environment = [{ name = "PORT", value = "8080" }]
 
-      secrets = [{ name = "DATABASE_URL", valueFrom = aws_secretsmanager_secret.db_url.arn }]
+      secrets = [
+        { name = "DATABASE_URL", valueFrom = aws_secretsmanager_secret.db_url.arn },
+        { name = "JWT_SECRET", valueFrom = "${aws_secretsmanager_secret.auth.arn}:jwt_secret::" },
+      { name = "ADMIN_PASSWORD", valueFrom = "${aws_secretsmanager_secret.auth.arn}:admin_password::" }, ]
 
       logConfiguration = {
         logDriver = "awslogs"
